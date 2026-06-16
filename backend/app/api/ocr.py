@@ -1,11 +1,9 @@
 from pathlib import Path
-from typing import List
 
 from fastapi import (
     APIRouter,
     UploadFile,
-    File,
-    HTTPException
+    File
 )
 
 from app.services.deepseek_service import (
@@ -23,7 +21,6 @@ router = APIRouter(
 )
 
 UPLOAD_DIR = "uploads"
-MAX_IMAGE_BATCH_SIZE = 5
 
 Path(UPLOAD_DIR).mkdir(
     parents=True,
@@ -49,51 +46,6 @@ async def ocr_image(
         "success": True,
         "filename": file.filename,
         "text": str(text)
-    }
-
-
-@router.post("/images")
-async def ocr_images(
-    files: List[UploadFile] = File(...)
-):
-    if len(files) == 0:
-        raise HTTPException(
-            status_code=400,
-            detail="No files uploaded"
-        )
-
-    if len(files) > MAX_IMAGE_BATCH_SIZE:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Maximum {MAX_IMAGE_BATCH_SIZE} images are allowed"
-        )
-
-    results = []
-
-    for file in files:
-        if file.content_type is not None and not file.content_type.startswith("image/"):
-            raise HTTPException(
-                status_code=400,
-                detail=f"{file.filename} is not an image"
-            )
-
-        file_path = f"{UPLOAD_DIR}/{file.filename}"
-
-        with open(file_path, "wb") as f:
-            content = await file.read()
-            f.write(content)
-
-        text = ocr_service.ocr_image(file_path)
-
-        results.append({
-            "filename": file.filename,
-            "text": str(text)
-        })
-
-    return {
-        "success": True,
-        "count": len(results),
-        "results": results
     }
 
 
