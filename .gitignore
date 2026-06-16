@@ -3,7 +3,13 @@ __pycache__/
 *.pyc
 uploads/
 outputs/
+outputs_*/
+*.jpg
+*.png
+*.jpeg
+
 node_modules/
 frontend/dist/
 .env
 *.tar.gz
+
