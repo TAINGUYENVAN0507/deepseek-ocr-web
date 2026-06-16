@@ -19,9 +19,27 @@ const createHistoryItem = (file, response) => ({
   filename: file.name,
   type: file.type || (file.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image"),
   pages: response.pages || 1,
-  text: response.text || "",
+  text: typeof response === "string" ? response : response.text || response.result || "",
   createdAt: new Date().toISOString()
 });
+
+const getErrorMessage = (error) => {
+  if (error.response?.data?.detail) {
+    return typeof error.response.data.detail === "string"
+      ? error.response.data.detail
+      : JSON.stringify(error.response.data.detail);
+  }
+
+  if (error.response?.status) {
+    return `OCR request failed with status ${error.response.status}.`;
+  }
+
+  if (error.request) {
+    return "Cannot reach the OCR backend. Please make sure FastAPI is running on port 8000.";
+  }
+
+  return error.message || "OCR failed.";
+};
 
 function App() {
   const [file, setFile] = useState(null);
@@ -57,12 +75,16 @@ function App() {
 
       const item = createHistoryItem(file, response);
 
+      if (!item.text) {
+        throw new Error("The OCR API responded successfully but did not include text.");
+      }
+
       setResult(item);
       setHistory((current) => [item, ...current].slice(0, 12));
       setActiveHistoryId(item.id);
     } catch (error) {
       console.error(error);
-      setError("OCR failed. Please check your backend connection and try again.");
+      setError(getErrorMessage(error));
     } finally {
       setLoading(false);
     }

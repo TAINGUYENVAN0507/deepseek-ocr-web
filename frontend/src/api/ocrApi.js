@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000"
+  baseURL: import.meta.env.VITE_API_BASE_URL || "/api"
 });
 
 export const ocrImage = async (file) => {
@@ -9,15 +9,7 @@ export const ocrImage = async (file) => {
 
   formData.append("file", file);
 
-  const response = await api.post(
-    "/ocr/image",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data"
-      }
-    }
-  );
+  const response = await api.post("/ocr/image", formData);
 
   return response.data;
 };
@@ -27,15 +19,7 @@ export const ocrPdf = async (file) => {
 
   formData.append("file", file);
 
-  const response = await api.post(
-    "/ocr/pdf",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data"
-      }
-    }
-  );
+  const response = await api.post("/ocr/pdf", formData);
 
   return response.data;
 };
